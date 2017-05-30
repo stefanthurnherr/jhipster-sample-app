@@ -69,11 +69,11 @@ pipeline {
         parallel(
         'Frontend' : {
             script {
-                node {
-                    unstash 'ws'
-                    //sh 'gulp test'
-                    sh './frontEndTests.sh'
-                }
+              node {
+                unstash 'ws'
+                //sh 'gulp test'
+                sh './frontEndTests.sh'
+              }
             }
         },
         'Performance' : {
@@ -88,24 +88,24 @@ pipeline {
             }
         })
       }
-      
-      stage('Deploy to Staging') {
-        agent any
-        environment {
-            STAGING_AUTH = credentials('staging')
-        }
-        when {
-            anyOf {
-                branch "master"
-                branch "release-*"
-            }
-        }
-        steps {
-            unstash 'war'
-            sh './deploy.sh staging -v $REL_VERSION -u $STAGING_AUTH_USR -p $STAGING_AUTH_PSW'                
-        }
-        //Post: Send notifications; hipchat, slack, send email etc.
+    }
+    
+    stage('Deploy to Staging') {
+      agent any
+      environment {
+        STAGING_AUTH = credentials('staging')
       }
+      when {
+        anyOf {
+          branch "master"
+          branch "release-*"
+        }
+      }
+      steps {
+        unstash 'war'
+        sh './deploy.sh staging -v $REL_VERSION -u $STAGING_AUTH_USR -p $STAGING_AUTH_PSW'                
+      }
+      //Post: Send notifications; hipchat, slack, send email etc.
     }
   }
 }
