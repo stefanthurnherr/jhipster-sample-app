@@ -45,6 +45,16 @@ pipeline {
         unstash 'war'
         sh './mvnw -B test findbugs:findbugs'
       }
+      post {
+        success {
+          junit '**/surefire-reports/**/*.xml'
+          findbugs pattern: 'target/**/findbugsXml.xml', unstableNewAll: '0' //unstableTotalAll: '0'
+        }
+        unstable {
+          junit '**/surefire-reports/**/*.xml'
+          findbugs pattern: 'target/**/findbugsXml.xml', unstableNewAll: '0' //unstableTotalAll: '0'
+        }
+      }
     }
 
     stage('More Tests') {
