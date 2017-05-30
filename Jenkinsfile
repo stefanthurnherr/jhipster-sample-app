@@ -19,6 +19,11 @@ pipeline {
         echo 'Build Backend'
         unstash 'ws'
       }
+      post {
+        success {
+          archive 'target/**/*.war'
+        }
+      }
     }
 
     stage('More Tests') {
