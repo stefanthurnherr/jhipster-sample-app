@@ -1,4 +1,7 @@
 pipeline {
+  environment {
+    REL_VERSION = "${BRANCH_NAME.contains('release-') ? BRANCH_NAME.drop(BRANCH_NAME.lastIndexOf('-')+1) + '.' + BUILD_NUMBER : ""}"
+  }
   agent none
   options {
     skipDefaultCheckout()
@@ -107,5 +110,37 @@ pipeline {
       }
       //Post: Send notifications; hipchat, slack, send email etc.
     }
+    stage('Archive') {
+      agent any
+      when {
+        not {
+            anyOf {
+                branch "master"
+                branch "release-*"
+            }
+        }
+      }
+      steps {
+        unstash 'war'
+        archiveArtifacts artifacts: 'target/**/*.war', fingerprint: true, allowEmptyArchive: true
+      }
+    }
+    stage('Deploy to production') {
+      agent any
+      environment {
+        PROD_AUTH = credentials('production')
+      }
+      when {
+        branch "release-*"
+      }
+      steps {
+        timeout(15) {
+            input message: 'Deploy to production?', ok: 'Fire zee missiles!'
+            unstash 'war'
+            sh './deploy.sh production -v $REL_VERSION -u $PROD_AUTH_USR -p $PROD_AUTH_PSW'
+        }
+      }
+    }
   }
+  //Post: notifications; hipchat, slack, send email etc.
 }
